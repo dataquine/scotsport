@@ -1,0 +1,370 @@
+---
+title: "Data cleaning - Facilities"
+subtitle: "Sports Facilities in Scotland"
+format: html
+editor: visual
+params:
+  filename_scotland_sports_facilities_csv: "scotland-sports-facilities.csv"
+editor_options: 
+  chunk_output_type: console
+---
+
+## Data source
+
+Spatial Hub Scotland: Sports Facilities - Scotland
+
+<https://data.spatialhub.scot/dataset/sports_facilities-unknown>
+
+> ### **Terms and Conditions from** Spatial Hub Scotland
+>
+> The dataset is provided under [Open Government Licence (OGL)](https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/) for download and use. You are free to copy, publish, distribute and transmit the information as long as you acknowledge the source as coming from Improvement Service under OGL.
+>
+> Please note: while the Improvement Service shall make reasonable efforts ("Best Endeavours") to collect and provide accurate and up-to-date data, the Improvement Service does not guarantee the accuracy, completeness, or reliability of the Data provided. By accessing the data you acknowledge that the data may contain errors, omissions, or inconsistencies, and use the data at your own risk.
+>
+> [Open Government Licence (OGL)](https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/)
+>
+> This dataset contains multiple themed layers of different types of sporting facilities across Scotland. The facilities are represented as point locations, which have been captured against Google Maps (along with attributes and details about them). Where there are multiple sports facilities at the same location there will be multiple points, meaning that calculations of total numbers of facilities can be calculated easily.
+>
+> Where there were missing coordinates for some facilities, manual lookups of appropriate coordinates have been made. Also, a judgement has been made to delete some provided facilities where they appear to no longer exist (for whatever reason).
+>
+> Provided layers are:
+>
+> Athletics Tracks (incl velodromes, training areas, indoor and outdoor)
+>
+> Bowling Greens (incl croquet, petanque and cricket squares)
+>
+> Fitness Suites
+>
+> Golf Courses
+>
+> Ice Rinks (incl curling rinks)
+>
+> Pitches (incl size, sport and type)
+>
+> Sports Halls (incl gyms and other types)
+>
+> Squash Court
+>
+> Swimming Pools (incl diving and other types)
+>
+> Indoor Tennis Courts
+>
+> Outdoor Tennis Courts
+>
+> Please note that the information provided is provided by third parties and therefore we cannot guarantee its accuracy, but it is the most up to date information we hold.
+>
+> As part of our work to keep this data up to date, we would kindly request that if you identify any issues, you share this with sportscotland at facilities\@sportscotland.org.uk
+
+```{r}
+#| label: libraries
+library(here)
+library(tidyverse)
+```
+
+```{r}
+#| label: data-source-facility-info
+url_data_source <- "https://data.spatialhub.scot/dataset/sports_facilities-unknown"
+
+# Data source acknowledge
+# The dataset is provided under Open Government Licence (OGL) for download and
+# use. You are free to copy, publish, distribute and transmit the information as
+# long as you acknowledge the source as coming from Improvement Service under
+# OGL.
+
+# Please note: while the Improvement Service shall make reasonable efforts
+# ("Best Endeavours") to collect and provide accurate and up-to-date data, the
+# Improvement Service does not guarantee the accuracy, completeness, or
+# reliability of the Data provided. By accessing the data you acknowledge that
+# the data may contain errors, omissions, or inconsistencies, and use the data
+# at your own risk.
+
+
+df_facility_type_info <- tribble(
+  ~id, ~slug, ~facility_type, ~facility_type_desciption, ~url,
+  "pub_spfat", "athletics-tracks", "Athletics Tracks", "includes velodromes, training areas, indoor and outdoor", "https://geo.spatialhub.scot/geoserver/ext_spf/wfs?service=WFS&authkey=964e5ffb-92a9-47da-9dd0-c634eb1c7364&request=GetFeature&typeName=ext_spf:pub_spfat&format_options=filename:Sports_Facilities_-_Scotland&outputFormat=csv&propertyName=sh_date_uploaded,site_name,address,postcode,la_name,town,eastings_x,northing_y,facility_sub_type,fid",
+  "pub_spfbg", "bowling-greens", "Bowling Greens", "includes croquet, petanque and cricket squares", "https://geo.spatialhub.scot/geoserver/ext_spf/wfs?service=WFS&authkey=964e5ffb-92a9-47da-9dd0-c634eb1c7364&request=GetFeature&typeName=ext_spf:pub_spfbg&format_options=filename:Sports_Facilities_-_Scotland&outputFormat=csv&propertyName=sh_date_uploaded,site_name,address,postcode,la_name,town,eastings_x,northing_y,facility_sub_type,fid",
+  "pub_spffs", "fitness-suites", "Fitness Suites", "", "https://geo.spatialhub.scot/geoserver/ext_spf/wfs?service=WFS&authkey=964e5ffb-92a9-47da-9dd0-c634eb1c7364&request=GetFeature&typeName=ext_spf:pub_spffs&format_options=filename:Sports_Facilities_-_Scotland&outputFormat=csv&propertyName=sh_date_uploaded,site_name,address,postcode,la_name,town,eastings_x,northing_y,facility_sub_type,fid",
+  "pub_spfgc", "golf-courses", "Golf Courses", "", "https://geo.spatialhub.scot/geoserver/ext_spf/wfs?service=WFS&authkey=964e5ffb-92a9-47da-9dd0-c634eb1c7364&request=GetFeature&typeName=ext_spf:pub_spfgc&format_options=filename:Sports_Facilities_-_Scotland&outputFormat=csv&propertyName=sh_date_uploaded,site_name,address,postcode,la_name,town,eastings_x,northing_y,facility_sub_type,fid",
+  "pub_spfir", "ice-rinks", "Ice Rinks", "includes curling rinks", "https://geo.spatialhub.scot/geoserver/ext_spf/wfs?service=WFS&authkey=964e5ffb-92a9-47da-9dd0-c634eb1c7364&request=GetFeature&typeName=ext_spf:pub_spfir&format_options=filename:Sports_Facilities_-_Scotland&outputFormat=csv&propertyName=sh_date_uploaded,site_name,address,postcode,la_name,town,eastings_x,northing_y,facility_sub_type,fid",
+  "pub_spfp", "pitches", "Pitches", "includes size, sport and type", "https://geo.spatialhub.scot/geoserver/ext_spf/wfs?service=WFS&authkey=964e5ffb-92a9-47da-9dd0-c634eb1c7364&request=GetFeature&typeName=ext_spf:pub_spfp&format_options=filename:Sports_Facilities_-_Scotland&outputFormat=csv&propertyName=sh_date_uploaded,site_name,address,postcode,la_name,town,eastings_x,northing_y,facility_sub_type,fid,surface",
+  "pub_spfsh", "sports-halls", "Sports Halls", "includes gyms and other types", "https://geo.spatialhub.scot/geoserver/ext_spf/wfs?service=WFS&authkey=964e5ffb-92a9-47da-9dd0-c634eb1c7364&request=GetFeature&typeName=ext_spf:pub_spfsh&format_options=filename:Sports_Facilities_-_Scotland&outputFormat=csv&propertyName=sh_date_uploaded,site_name,address,postcode,la_name,town,fid,x,y,fac_sub_type",
+  "pub_spfsc", "squash-courts", "Squash Courts", "", "https://geo.spatialhub.scot/geoserver/ext_spf/wfs?service=WFS&authkey=964e5ffb-92a9-47da-9dd0-c634eb1c7364&request=GetFeature&typeName=ext_spf:pub_spfsc&format_options=filename:Sports_Facilities_-_Scotland&outputFormat=csv&propertyName=sh_date_uploaded,site_name,address,postcode,la_name,town,eastings_x,northing_y,facility_sub_type,fid",
+  "pub_spfsp", "swimming-pools", "Swimming Pools", "includes diving and other types", "https://geo.spatialhub.scot/geoserver/ext_spf/wfs?service=WFS&authkey=964e5ffb-92a9-47da-9dd0-c634eb1c7364&request=GetFeature&typeName=ext_spf:pub_spfsp&format_options=filename:Sports_Facilities_-_Scotland&outputFormat=csv&propertyName=sh_date_uploaded,site_name,address,la_name,town,eastings_x,northing_y,fid,fac_sub_type",
+  "pub_spfitc", "tennis-courts-indoor", "Tennis Courts (Indoor)", "", "https://geo.spatialhub.scot/geoserver/ext_spf/wfs?service=WFS&authkey=964e5ffb-92a9-47da-9dd0-c634eb1c7364&request=GetFeature&typeName=ext_spf:pub_spfitc&format_options=filename:Sports_Facilities_-_Scotland&outputFormat=csv&propertyName=sh_date_uploaded,site_name,address,postcode,la_name,town,eastings_x,northing_y,facility_sub_type,fid,site_id,facid,management_type,ownership_category,facility_status,date_opened,flood_lights,surface",
+  "pub_spfotc", "tennis-courts-outdoor", "Tennis Courts (Outdoor)", "", "https://geo.spatialhub.scot/geoserver/ext_spf/wfs?service=WFS&authkey=964e5ffb-92a9-47da-9dd0-c634eb1c7364&request=GetFeature&typeName=ext_spf:pub_spfotc&format_options=filename:Sports_Facilities_-_Scotland&outputFormat=csv&propertyName=sh_date_uploaded,site_name,address,postcode,la_name,town,eastings_x,northing_y,facility_sub_type,fid"
+)
+
+# Spatial Hub is merely hosting the data for Sport Scotland, caveat
+data_caveat_spatial_hub <- "Please note that the information provided is provided by third parties and therefore we cannot guarantee its accuracy, but it is the most up to date information we hold."
+# View(df_facility_type_info)
+df_facility_type_info
+```
+
+```{r}
+#| label: data-source-dowload
+
+download_facility_data <- function(slug, url, path_destfile) {
+  bs <- basename(path_destfile)
+  print(glue::glue("Downloading [{slug}] url to ({bs})"))
+
+  # Delay in seconds after download
+  delay <- 1
+  download_code <- NULL
+  tryCatch(
+    {
+      # Download the facilities data CSV file
+      download_code <- 1 # download.file()
+    },
+    error = function(e) {
+      print(glue::glue("Problem downloading URL: {url}: {e}"))
+    },
+    # Be nice to servers and space out requests by a few seconds
+    finally = Sys.sleep(delay)
+  )
+  return(download_code)
+}
+
+DO_DOWNLOAD <- TRUE
+
+df_download_files <- df_facility_type_info |>
+  select(slug, url) |>
+  # Create the full path to the CSV in the raw directory
+  mutate(path_destfile = here::here("data-raw", paste0(slug, ".csv")))
+
+# test with one row
+# df_download_files <- df_download_files[1,]
+
+if (DO_DOWNLOAD) {
+  # For every row in dataframe, download the facilities data CSV file
+  purrr::pwalk(df_download_files, download_facility_data)
+}
+
+rm(df_download_files)
+```
+
+```{r}
+#| label: build-downloaded-file-list
+
+# Build the list of successfully downloaded facility CSV files
+csv_downloaded_files <- list.files(here::here("data-raw", "csv"),
+  pattern = "*.csv",
+  full.names = TRUE
+)
+```
+
+```{r}
+#| label: read-facilties-data
+
+# Build list of dataframes from reading in facility CSV data
+# N.B these files have many columns in common but some have
+# extra information or suspected mistakes in naming which we will clean manually
+
+build_slug_from_filename <- function(path_file) {
+  stringr::str_remove(basename(path_file), "\\.csv$")
+}
+
+df_scotland_sports_facilities_raw <- map(csv_downloaded_files, ~ read_csv(.x))
+
+# Label each list with the slug
+names(df_scotland_sports_facilities_raw) <-
+  build_slug_from_filename(csv_downloaded_files)
+
+# Fix Sports Hall entries
+# map(df_scotland_sports_facilities_raw, names)
+
+# combine list elements into a data frame by row
+df_scotland_sports_facilities_combined <-
+  list_rbind(df_scotland_sports_facilities_raw, names_to = "slug")
+rm(df_scotland_sports_facilities_raw)
+```
+
+```{r}
+#| label: clean-facilities-data
+
+# Fix inconsistencies in column
+df_scotland_sports_facilities_clean <- df_scotland_sports_facilities_combined |>
+  # Fix Sports Hall entries - some inconsistent column names
+  mutate(
+    facility_sub_type =
+      if_else(slug == "sports-halls", fac_sub_type, facility_sub_type),
+    eastings_x = if_else(slug == "sports-halls", x, eastings_x),
+    northing_y = if_else(slug == "sports-halls", y, northing_y)
+  ) |>
+  # Fix Swimming Pools entries - an inconsistent column name
+  mutate(
+    facility_sub_type =
+      if_else(slug == "swimming-pools", fac_sub_type, facility_sub_type)
+  ) |>
+  #
+  # mutate(town_is_clean = town != toupper(town), .after = town) |>
+  # Think we should rename so that by is after rather than leading for
+  # alphabetical sorting
+  # mutate(town_is_clean = ifelse(stringr::str_starts(town, "By "),
+  #   FALSE, town_is_clean
+  # )) |>
+  # Title Case (will handle exceptions later)
+  mutate(town_clean = stringr::str_to_title(town), .after = town) |>
+  # Remove misnamed columns
+  select(-fac_sub_type, -x, -y) |>
+  # Rename the unique id column FID to id as there may be confusions between
+  # FID = globally unique among all facility types
+  # fid = uniqie number within one facility type
+  rename(id = FID, date_updated = sh_date_uploaded, name = site_name) |>
+  relocate(slug, .after = id)
+
+# rm(df_scotland_sports_facilities_combined)
+# View(df_scotland_sports_facilities_clean)
+
+# Standardise Towns
+df_scotland_sports_facilities_clean <- df_scotland_sports_facilities_clean |>
+  mutate(
+    town_clean = stringr::str_replace(town_clean, " Of ", " of "),
+    town_clean = stringr::str_replace(town_clean, "(^By )(.*)", "\\2 (Near)"),
+    town_clean = stringr::str_replace(town_clean, "(^Nr )(.*)", "\\2 (Near)"),
+
+    # Individual exceptions
+    town_clean = stringr::str_replace(town_clean, "Berwick-Upon-Tweed", "Berwick-upon-Tweed"),
+    town_clean = stringr::str_replace(town_clean, "Grantown On Spey", "Grantown-on-Spey"),
+    town_clean = stringr::str_replace(town_clean, "Grantown-On-Spey", "Grantown-on-Spey"),
+    town_clean = stringr::str_replace(town_clean, "Newport-On-Tay", "Newport-on-Tay"),
+    town_clean = stringr::str_replace(town_clean, "Star, Markinch", "Star of Markinch"),
+    town_clean = stringr::str_replace(town_clean, "Cambeltown \\(Near\\)", "Campbeltown (Near)"),
+
+    # These are local authority names rather than towns
+    # tread carefully as could be duplicates
+    # Dumfries And Galloway, think these are both for Bannatynes - Dumfries
+    # pub_spffs.155 and pub_spfsp.174
+    town_clean = stringr::str_replace(town_clean, "Dumfries And Galloway", "Campbeltown (Near)"),
+
+    # Dunbartonshire - these seem like for Clydebank High School, 2 Janetta Street, G81 3EJ
+    town_clean = stringr::str_replace(town_clean, "Dunbartonshire", "Clydebank"),
+
+    # East Lothian - Humbie Village Hall, Kippithill, EH36 5PJ
+    town_clean = stringr::str_replace(town_clean, "East Lothian", "Humbie"),
+
+    # Trailing comma
+    # pub_spfp.625, Whitehills Primary School Fyfe Street DD8 3EQ, pitches
+    town_clean = stringr::str_replace(town_clean, "Forfar,", "Forfar"),
+
+    # pub_spfotc.1349 Stow Primary School, tennis-courts-outdoor, Station Yard,TD1 2SQ
+    town_clean = stringr::str_replace(town_clean, "Galasheils", "Galashiels"),
+
+    # pitches, Over Stenton Playing Field, Viewfield, KY6 2NG
+    town_clean = stringr::str_replace(town_clean, "Glenothes", "Glenrothes"),
+
+    # pub_spfp.1219 pitches,Stornoway Primary School, HS1 2LF
+    town_clean = stringr::str_replace(town_clean, "Jamieson Drive", "Stornoway"),
+
+    # Side effect of Title case
+    # pub_spfsh.2612 sports-halls, Kincardine O'Neil School, North Deeside Road, AB34 5AB
+    town_clean = stringr::str_replace(town_clean, "Kincardine O'neil", "Kincardine O'Neil"),
+
+    # pub_spfp.2195, pitches, Balmullo Primary School, Hayston Park, KY16 0DH
+    town_clean = stringr::str_replace(town_clean, "Leuchars St Andrews", "St Andrews"),
+
+    # pub_spfp.584, pitches, Monikie Primary School, DD5 3QN
+    town_clean = stringr::str_replace(town_clean, "Monikie,", "Monikie"),
+
+    # pub_spfsh.402, sports-halls, Kirklandneuk Primary School, Ard Road, PA4 9DA
+    town_clean = stringr::str_replace(town_clean, "Renfrew\\?", "Renfrew"),
+
+    # pub_spfgc.956, golf-courses, Asta Golf Club, ZE1 0UQ
+    town_clean = stringr::str_replace(town_clean, "Shetland, Scotland", "Shetland"),
+
+    # pub_spfp.3098, pitches,Smithton Primary School, 59 Smithton Park, IV2 7PD
+    town_clean = stringr::str_replace(town_clean, "Smithton, Inverness", "Smithton"),
+
+    # pub_spfp.2186, pitches,Arncroach Football Pitch,ARNCROACH,KY10 2RW
+    town_clean = stringr::str_replace(town_clean, "St Monance \\(Near\\)", "Arncroach"),
+
+    # pub_spfp.606, pitches, Strathmartine Primary School, DD3 0PH
+    town_clean = stringr::str_replace(town_clean, "Strathmartine,", "Bridgefoot"),
+
+    # pub_spfitc.54, Morton of Pitmilly Resort, Morton of Pitmilly Countryside Resort, Kingsbarns, KY16 8QF
+    management_type = ifelse (management_type == "Unknown", NA, management_type)
+  ) |>
+  rename(town_orig = town, town = town_clean)
+#   relocate(facility_type, .after = id) |>
+
+df_facility_types <- df_facility_type_info |>
+  select(slug, facility_type)
+
+df_scotland_sports_facilities_clean <- df_scotland_sports_facilities_clean |>
+  left_join(df_facility_types, by = join_by(slug)) |>
+  relocate(facility_type, .after = id) |>
+  relocate(facility_sub_type, .after = facility_type) |>
+  # change & to and
+  mutate(
+    la_name = stringr::str_replace(la_name, "&", "and"),
+    la_name = stringr::str_replace(
+      la_name, "Comhairle nan Eilean Siar",
+      "Na h-Eileanan Siar"
+    ),
+    # To save screen estate we'll label columns with Council so don't need it repeated
+    la_name = stringr::str_remove(la_name, " Council"),
+    
+    facility_sub_type = ifelse (is.na(facility_sub_type), "Unspecified", facility_sub_type)
+  )
+
+long_lat <- df_scotland_sports_facilities_clean |>
+  # lng = eastings_x, lat = northing_y
+  sf::st_as_sf(
+    coords = c("eastings_x", "northing_y"),
+    # coordinate reference system code for eastings/northings
+    crs = 27700
+  ) |>
+  # coord ref system code for latitude longitude
+  sf::st_transform(crs = 4326) |>
+  sf::st_coordinates() |> 
+  as_tibble() |> 
+  rename(lng = X, lat = Y)
+
+# Join the converted easting/northing data as long/lat columns
+df_scotland_sports_facilities_clean <-  bind_cols(df_scotland_sports_facilities_clean, long_lat)
+  #cbind(df_scotland_sports_facilities_clean, long_lat) 
+
+# For convenience move the calculated long lat columns to be next to 
+# the National Grid column
+df_scotland_sports_facilities_clean <- df_scotland_sports_facilities_clean |> 
+  relocate(lng, .after = northing_y) |> 
+  relocate(lat, .after = lng) |> 
+  
+  # Just make it easier if eyeballing the rows
+  relocate(slug, .after = id)
+
+View(df_scotland_sports_facilities_clean)
+```
+
+```{r}
+#| label: write-clean-facilities-data
+# Write out cleaned dataset
+write_csv(
+  df_scotland_sports_facilities_clean,
+  here::here("data", params$filename_scotland_sports_facilities_csv)
+)
+```
+
+```{r}
+#| label: write-clean-population-data
+# Write out cleaned dataset
+# write_csv(df_scotland_sports_facilities_clean,
+#           here::here("data", params$filename_scotland_sports_facilities_csv))
+```
+
+```{r}
+df_scotland_sports_facilities_slim <- df_scotland_sports_facilities_clean |>
+  select(
+    -id, , -address, -town_orig, -eastings_x,
+    -northing_y, -fid, -facid, -site_id
+  )
+```
+
+```{r}
+df_scotland_sports_facilities_slim |>
+  select_if(is.character) |>
+  ## map(~ dplyr::count(data.frame(x = .x), x)) #, sort = TRUE))
+  map(~ dplyr::count(tibble(x = .x), x)) # , sort = TRUE))
+```
+
+```{}
+```
