@@ -33,6 +33,9 @@ url_population_data_source <- "https://www.nrscotland.gov.uk/files//statistics/p
 sheet_population_data <- "Table 3"
 sheet_population_skip <- 5
 
+# For switching off during dev
+DO_DOWNLOAD <- TRUE
+
 # download-population-data -----------------------------------------------------
 path_population_spreadsheet_raw <- here::here(
   "data-raw",
@@ -43,22 +46,17 @@ message(glue::glue(
   "Downloading population data from {url_population_data_source}"
 ))
 
-# This is provided as an Excel spreadsheet, download the binary
-download_result <- download.file(url_population_data_source,
-  path_population_spreadsheet_raw,
-  quiet = FALSE,
-  mode = "wb"
-)
-
-#  0 for success and non-zero for failure.
-download_ok <- download_result == 0
-
-stopifnot(download_ok)
-
-# if (!download_ok) {
-#   print("Error downloading population file")
-#   stop()
-# }
+if (DO_DOWNLOAD) {
+  # This is provided as an Excel spreadsheet, download the binary
+  download_result <- download.file(url_population_data_source,
+                                   path_population_spreadsheet_raw,
+                                   quiet = FALSE,
+                                   mode = "wb"
+  )
+  #  0 for success and non-zero for failure.
+  download_ok <- download_result == 0
+  stopifnot(download_ok)
+}
 
 # clean-population-data --------------------------------------------------------
 
@@ -75,14 +73,16 @@ population_data_spreadsheet_raw <- readxl::read_xlsx(
 population_data_spreadsheet <- population_data_spreadsheet_raw |>
   filter(
     sex == "Persons",
-    area_type == "Country",
-    area_type == "Council area"
+    area_type %in% c("Country", "Council area")
   ) |>
-  # Keep the last column as the 'latest' year of poopulation data available
+  # Keep the last column as the 'latest' year of population data available
   select(area_type, area_name = area_name_note_3, last_col())
 
 # write-population-data --------------------------------------------------------
-write_csv(population_data_spreadsheet, here::here(
-  "data",
-  filename_population_scotland_csv
-))
+write_csv(
+  population_data_spreadsheet,
+  here::here("data", filename_population_scotland_csv)
+)
+
+rm(population_data_spreadsheet)
+rm(population_data_spreadsheet_raw)
