@@ -25,6 +25,7 @@ library(here)
 library(janitor)
 library(readr)
 library(readxl) # For processing Excel spreadsheets
+library(tidyr)
 
 # Constants --------------------------------------------------------------------
 filename_population_scotland_csv <- "scotland-population.csv"
@@ -49,9 +50,9 @@ message(glue::glue(
 if (DO_DOWNLOAD) {
   # This is provided as an Excel spreadsheet, download the binary
   download_result <- download.file(url_population_data_source,
-                                   path_population_spreadsheet_raw,
-                                   quiet = FALSE,
-                                   mode = "wb"
+    path_population_spreadsheet_raw,
+    quiet = FALSE,
+    mode = "wb"
   )
   #  0 for success and non-zero for failure.
   download_ok <- download_result == 0
@@ -66,17 +67,28 @@ population_data_spreadsheet_raw <- readxl::read_xlsx(
   sheet = sheet_population_data,
   skip = sheet_population_skip
 ) |>
-  janitor::clean_names()
-
-# Get the sheet out of the spreadsheet
-# Mid-year population estimates by administrative area and sex, 1981-2022 [note 1] [note 2]
-population_data_spreadsheet <- population_data_spreadsheet_raw |>
+  janitor::clean_names() |>
+  # Get the sheet out of the spreadsheet
+  # Mid-year population estimates by administrative area and sex, 1981-2022 [note 1] [note 2]
   filter(
     sex == "Persons",
     area_type %in% c("Country", "Council area")
   ) |>
   # Keep the last column as the 'latest' year of population data available
   select(area_type, area_name = area_name_note_3, last_col())
+
+population_data_spreadsheet <- population_data_spreadsheet_raw |>
+  # Split the year out of a column name like x2022
+  tidyr::pivot_longer(
+    cols = last_col(),
+    names_to = "year",
+    values_to = "population",
+    names_prefix = "x"
+  ) |>
+  mutate(
+    year = as.integer(year),
+    across(starts_with("area"), as.factor)
+  )
 
 # write-population-data --------------------------------------------------------
 write_csv(
