@@ -76,7 +76,10 @@ if (DO_DOWNLOAD) {
 if (download_council_boundary_code == 0) {
   # read-council-boundary-data -------------------------------------------------
   df_scotland_council_boundary_clean <-
-    sf::st_read(path_council_boundary_destfile)
+    sf::st_read(path_council_boundary_destfile) |>
+
+    # Reduce the size of the boundary file tolerance = 1000 metres
+    sf::st_simplify(dTolerance = 1000)
 
   # Make the Western Isles consistent with the facility data version
   df_scotland_council_boundary_clean$local_authority <-
