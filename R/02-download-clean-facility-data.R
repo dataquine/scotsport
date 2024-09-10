@@ -287,6 +287,13 @@ df_scotland_sports_facility_clean <- df_scotland_sports_facility_clean |>
     management_type = ifelse(management_type == "Unknown", NA, management_type)
   ) |>
   rename(town_orig = town, town = town_clean)
+
+
+# Fintry Sports Club (Strathendrick RFC)
+# Local authority Glasgow City Should be Stirling?
+df_scotland_sports_facility_clean[df_scotland_sports_facility_clean$name == "Fintry Sports Club (Strathendrick RFC)",]$la_name <- "Stirling"
+
+
 #   relocate(facility_type, .after = id) |>
 
 df_facility_types <- df_facility_type_info |>
