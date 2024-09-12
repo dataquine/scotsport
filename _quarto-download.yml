@@ -1,0 +1,22 @@
+# Run this version if you want to download the original datasets
+# The pre-render will download, clean and wrangle the source data to produce the
+# contents in the 'data' folder
+
+project:
+  title: "ScotSport - sports facilities in Scotland"
+  render:
+    - index.qmd
+
+  pre-render:
+    # Download and clean data required by app
+
+    # Get population data from the National Records of Scotland
+    - R/01-download-clean-population-data.R
+
+    # Get facility data from Sport Scotland/Improvement Service
+    # Spatial Hub Scotland
+    - R/02-download-clean-facility-data.R
+
+    # Get council boundary data from Improvement Service
+    # Spatial Hub Scotland
+    - R/03-download-clean-council-boundary-data.R
