@@ -346,18 +346,36 @@ df_scotland_sports_facility_clean <- df_scotland_sports_facility_clean |>
   relocate(lng, .after = northing_y) |>
   relocate(lat, .after = lng) |>
   # Just make it easier if eyeballing the rows
-  relocate(slug, .after = id)
+  relocate(slug, .after = id) |>
 
+  # Change categories to factors
+  mutate_at(c("slug", "facility_type", "facility_sub_type", "la_name",
+              "management_type", "ownership_category", "facility_status",
+              "flood_lights"),
+            as.factor)
+
+#glimpse(df_scotland_sports_facility_clean)
 #View(df_scotland_sports_facility_clean)
 
 # write-clean-facility-data --------------------------------------------------
-# Write out cleaned dataset
+# Write out cleaned dataset CSV for human readability
 write_csv(
   df_scotland_sports_facility_clean,
   here::here("data", filename_scotland_sports_facility_csv)
+)
+
+# Write out cleaned dataset RDS for performance in Shiny app - app should use
+# this version
+filename_scotland_sports_facility_rds <- stringr::str_replace(
+  filename_scotland_sports_facility_csv, ".csv", ".rds")
+
+write_rds(
+  df_scotland_sports_facility_clean,
+  here::here("data", filename_scotland_sports_facility_rds)
 )
 
 rm(df_scotland_sports_facility_combined)
 rm(df_scotland_sports_facility_clean)
 rm(df_facility_types)
 rm(df_long_lat_facility)
+rm(df_facility_type_info)
