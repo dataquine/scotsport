@@ -60,13 +60,13 @@
 # facilities@sportscotland.org.uk
 
 # Libraries --------------------------------------------------------------------
-library(dplyr)
-library(glue)
-library(here)
-library(purrr)
-library(readr)
-library(stringr)
-library(tibble)
+library(dplyr) # A Grammar of Data Manipulation
+library(glue) # Interpreted String Literals
+library(here) # A Simpler Way to Find Your Files
+library(purrr) # Functional Programming Tools
+library(readr) # Read Rectangular Text Data
+library(stringr) # Simple, Consistent Wrappers for Common String Operations
+library(tibble) # Simple Data Frames
 
 # Constants --------------------------------------------------------------------
 url_facility_data_source <- "https://data.spatialhub.scot/dataset/sports_facilities-unknown"
@@ -379,3 +379,4 @@ rm(df_scotland_sports_facility_clean)
 rm(df_facility_types)
 rm(df_long_lat_facility)
 rm(df_facility_type_info)
+
