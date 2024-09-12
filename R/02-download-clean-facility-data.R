@@ -354,6 +354,59 @@ df_scotland_sports_facility_clean <- df_scotland_sports_facility_clean |>
               "flood_lights"),
             as.factor)
 
+# Do extra research on entries missing towns
+# Xcite Bathgate, town = Bathgate, some have missing postcode too
+df_scotland_sports_facility_clean$postcode[df_scotland_sports_facility_clean$name == "Xcite Bathgate"] <- "EH48 4LA"
+df_scotland_sports_facility_clean$town[df_scotland_sports_facility_clean$name == "Xcite Bathgate"] <- "Bathgate"
+#df_scotland_sports_facility_clean[df_scotland_sports_facility_clean$name == "Xcite Bathgate",]
+
+# Archerfield Links, no town
+# https://archerfieldgolfclub.com/
+# https://en.wikipedia.org/wiki/Archerfield_Estate_and_Links
+# Archerfield, Golf Green - Dirleton,East Lothian, EH39 5HU
+df_scotland_sports_facility_clean$town[df_scotland_sports_facility_clean$name == "Archerfield Links"] <- "North Berwick (Near)"
+df_scotland_sports_facility_clean[df_scotland_sports_facility_clean$name == "Archerfield Links",]
+
+# Stoneyburn Bowling Club
+# https://www.stoneyburnbowlingclub.co.uk/, Main Street, Stoneyburn, EH47 8AU
+# Bowling green,  Stoneyburn, Bathgate EH47 8BU
+df_scotland_sports_facility_clean$town[df_scotland_sports_facility_clean$name == "Stoneyburn Bowling Club"] <- "Bathgate"
+#df_scotland_sports_facility_clean[df_scotland_sports_facility_clean$name == "Stoneyburn Bowling Club",]
+
+# North West Community Campus Primary, town = Dumfries
+# https://www.dumgal.gov.uk/northwestcommunitycampus
+df_scotland_sports_facility_clean$town[df_scotland_sports_facility_clean$name == "North West Community Campus Primary"] <- "Dumfries"
+#df_scotland_sports_facility_clean[df_scotland_sports_facility_clean$name == "North West Community Campus Primary",]
+
+# Cowan Park
+df_scotland_sports_facility_clean$town[df_scotland_sports_facility_clean$name == "Cowan Park"] <- "Glasgow"
+#df_scotland_sports_facility_clean[df_scotland_sports_facility_clean$name == "Cowan Park",]
+
+# Bannatyne Health Club Inverness, town=Inverness, missing postcode in one
+# https://www.bannatyne.co.uk/health-club/inverness, The Inshes Retail & Leisure Park, Inverness, IV2 3TW
+df_scotland_sports_facility_clean$town[df_scotland_sports_facility_clean$name == "Bannatyne Health Club Inverness"] <- "Glasgow"
+df_scotland_sports_facility_clean$postcode[df_scotland_sports_facility_clean$name == "Bannatyne Health Club Inverness"] <- "IV2 3TW"
+#df_scotland_sports_facility_clean[df_scotland_sports_facility_clean$name == "Bannatyne Health Club Inverness",]
+
+# Football Ground - Balblair, town = near Dingwall
+df_scotland_sports_facility_clean$town[df_scotland_sports_facility_clean$name == "Football Ground - Balblair"] <- "Dingwall (Near)"
+#df_scotland_sports_facility_clean[df_scotland_sports_facility_clean$name == "Football Ground - Balblair",]
+
+# St Timothys RC Primary School (there are two so using id)
+df_scotland_sports_facility_clean$town[df_scotland_sports_facility_clean$id == "pub_spfp.3785"] <- "Coatbridge"
+#df_scotland_sports_facility_clean[df_scotland_sports_facility_clean$id == "pub_spfp.3785",]
+
+# Bishopton Primary School
+df_scotland_sports_facility_clean$town[df_scotland_sports_facility_clean$name == "Bishopton Primary School"] <- "Bishopton"
+df_scotland_sports_facility_clean[df_scotland_sports_facility_clean$name == "Bishopton Primary School",]
+
+# Aviemore Activity Centre it's part of a hotel, Sorry but our pool complex is not open to non-guests.
+# https://www.macdonaldhotels.co.uk/aviemore/see-and-do/activities/swimming, Highland Resort, Aviemore PH22 1PN
+df_scotland_sports_facility_clean$town[df_scotland_sports_facility_clean$name == "Aviemore Activity Centre"] <- "Aviemore"
+df_scotland_sports_facility_clean$postcode[df_scotland_sports_facility_clean$name == "Aviemore Activity Centre"] <- "PH22 1PN"
+df_scotland_sports_facility_clean[df_scotland_sports_facility_clean$name == "Aviemore Activity Centre",]
+
+
 #glimpse(df_scotland_sports_facility_clean)
 #View(df_scotland_sports_facility_clean)
 
