@@ -72,7 +72,7 @@ council_areas <- df_sports_facilities_scotland |>
 # Unique town names ----------------------------------------------------
 town_names <- df_sports_facilities_scotland |>
   count(town) |>
-  drop_na() |>
+  drop_na() |> # Need more data cleaning to identify missing towns
   arrange(town)
 
   list_town_names <-  town_names$town
