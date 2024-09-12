@@ -19,13 +19,14 @@
 #     "Link to Open Government Licence v3.0") except where otherwise stated.
 
 # Libraries --------------------------------------------------------------------
-library(dplyr)
-library(glue)
-library(here)
-library(janitor)
-library(readr)
+library(dplyr) # A Grammar of Data Manipulation
+library(glue) # Interpreted String Literals
+library(here) # A Simpler Way to Find Your Files
+library(janitor) # Simple Tools for Examining and Cleaning Dirty Data
+library(readr) # Read Rectangular Text Data
 library(readxl) # For processing Excel spreadsheets
-library(tidyr)
+library(stringr) # Simple, Consistent Wrappers for Common String Operations
+library(tidyr) # Tidy Messy Data
 
 # Constants --------------------------------------------------------------------
 filename_population_scotland_csv <- "scotland-population.csv"
@@ -90,11 +91,24 @@ population_data_spreadsheet <- population_data_spreadsheet_raw |>
     across(starts_with("area"), as.factor)
   )
 
+#glimpse(population_data_spreadsheet)
+#View(population_data_spreadsheet)
+
 # write-population-data --------------------------------------------------------
+# Write CSV for human readable version
 write_csv(
   population_data_spreadsheet,
   here::here("data", filename_population_scotland_csv)
 )
 
+# Write RDS for Shiny app
+filename_population_scotland_rds <- stringr::str_replace(
+  filename_population_scotland_csv, ".csv", ".rds")
+write_rds(
+  population_data_spreadsheet,
+  here::here("data", filename_population_scotland_rds)
+)
+
 rm(population_data_spreadsheet)
 rm(population_data_spreadsheet_raw)
+
