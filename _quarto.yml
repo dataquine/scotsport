@@ -1,10 +1,4 @@
 project:
-  title: "Scotsport - sports facilities in Scotland"
-  output-dir: _output
+  title: "ScotSport - sports facilities in Scotland"
   render:
     - index.qmd
-#  render:
-#    - "*.qmd"
-  preview:
-    port: 4200
-    browser: true
