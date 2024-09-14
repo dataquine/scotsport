@@ -3,10 +3,6 @@
 # contents in the 'data' folder
 
 project:
-  title: "ScotSport - sports facilities in Scotland"
-  render:
-    - index.qmd
-
   pre-render:
     # Download and clean data required by app
 
