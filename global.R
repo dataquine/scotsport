@@ -1,6 +1,6 @@
 # File: global.R
 # Author: Lesley Duff
-# Date createdd: 2024-08-31
+# Date created: 2024-08-31
 # Description:
 #  Read in clean data from Sport Scotland and National Records of Scotland
 
@@ -19,17 +19,19 @@ library(htmltools) # Tools for HTML
 library(leaflet) # Create Interactive Web Maps with the JavaScript 'Leaflet' Library
 library(mapview) # Interactive Viewing of Spatial Data in R
 library(readr) # Read Rectangular Text Data
+library(markdown) # Render Markdown with 'commonmark'
 library(scales) # Scale Functions for Visualization
 library(sf) # Simple Features for R
 library(shiny) # Web Application Framework for R
 library(stringr) # Simple, Consistent Wrappers for Common String Operations
 library(tidyr) # Tidy Messy Data
+library(viridis) # Colorblind-Friendly Color Maps for R
 
 
 # Constants --------------------------------------------------------------------
 
 filename_scotland_sports_facilities_csv <- "scotland-sports-facility.csv"
-filename_population_csv <- "scotland-population.csv"
+filename_population_rds <- "scotland-population.rds"
 filename_council_bounary_rds <- "scotland-council-boundary.rds"
 
 caption_source_sport_scotland <- "Sport Scotland"
@@ -40,17 +42,17 @@ df_sports_facilities_scotland <- readr::read_csv(
   here::here("data", filename_scotland_sports_facilities_csv)
 )
 
-df_population_scotland <- readr::read_csv(
-  here::here("data", filename_population_csv)
-) |>
-  mutate(
-    across(starts_with("area_"), as.factor)
-  )
+df_population_scotland <- readr::read_rds(
+  here::here("data", filename_population_rds)
+)
 
+# Geometry of council areas and hectares
 df_council_boundaries <- readr::read_rds(here::here(
   "data",
   filename_council_bounary_rds
-))
+)) |>
+  select(local_authority, hectares, geometry)
+
 
 # Calculated values ------------------------------------------------------------
 
@@ -61,7 +63,8 @@ total_facilities_scotland <- nrow(df_sports_facilities_scotland)
 latest_update <- max(df_sports_facilities_scotland$date_updated)
 
 # Date to show to user
-date_updated <- format(latest_update, format = "%d %B %Y")
+#date_updated <- get_date(latest_update)
+#format(latest_update, format = "%d %B %Y")
 
 # Unique council area names ----------------------------------------------------
 council_areas <- df_sports_facilities_scotland |>
@@ -86,3 +89,10 @@ population_country <- df_population_scotland |>
 population_council <- df_population_scotland |>
   filter(area_type == "Council area") |>
   select(-area_type, -year)
+
+get_date <- function(str_date) {
+  format(str_date, format = "%d %B %Y")
+}
+
+# Date that faciities dataset was last updated
+date_updated <- get_date(latest_update)
