@@ -94,5 +94,5 @@ get_date <- function(str_date) {
   format(str_date, format = "%d %B %Y")
 }
 
-# Date that faciities dataset was last updated
+# Date that facilities dataset was last updated
 date_updated <- get_date(latest_update)
