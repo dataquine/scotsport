@@ -97,17 +97,14 @@ Houndstooth By <a href="//commons.wikimedia.org/wiki/User:Kotivalo" title="User:
 
 ## Technical
 
-To run this application locally you will require R and Quarto
-
 ### Installation
 
-Clone the repository and
+Clone the repository and run the Shiny app.
 
-```         
-quarto render
-```
+The main dashboard is in file `index.qmd`
 
-This should open a web page of the dashboard application.
+See [Running Documents](https://quarto.org/docs/interactive/shiny/running.html)
+for different ways of running the document.
 
 ### Source data
 
