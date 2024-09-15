@@ -3,10 +3,16 @@
 .RData
 .Ruserdata
 
-data-raw
-data
-
 /.quarto/
-_scratch
 
 /_*.local
+
+# RStudio Connect folder
+rsconnect/
+
+# Temporary project files
+_scratch/
+
+# Apple
+.DS_Store
+
