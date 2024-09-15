@@ -5,25 +5,25 @@
 #  Handle the server side of the ScotSport Shiny app
 
 function(input, output, session) {
-  scotland_areas <- reactive( # input$select_council,
-    {
-      selected_council_name <- input$select_council
-      num_councils <- length(selected_council_name)
+  # Reactives ------------------------------------------------------------------
+  scotland_areas <- reactive({
+    selected_council_name <- input$select_council
+    num_councils <- length(selected_council_name)
 
-      areas <- df_sports_facilities_scotland |>
-        group_by(la_name)
+    areas <- df_sports_facilities_scotland |>
+      group_by(la_name)
 
-      if (num_councils > 0) {
-        areas <- areas |>
-          filter(la_name %in% selected_council_name)
-      }
-
+    if (num_councils > 0) {
       areas <- areas |>
-        ungroup()
-
-      return(areas)
+        filter(la_name %in% selected_council_name)
     }
-  )
+
+    areas <- areas |>
+      ungroup()
+
+    return(areas)
+  }) |>
+    bindCache(input$select_council)
 
   # Build gt table object of counts by Facility type and subtype
   # This will be filtered by council area where user has made a selection
@@ -34,13 +34,10 @@ function(input, output, session) {
       count(facility_type, facility_sub_type,
         name = "Facilities"
       ) |>
-      #  arrange() |>  ##desc(Facilities)) |>
-      # Rearrange subtypes according to highest facilities per subtype
       arrange(facility_type, desc(Facilities)) |>
-      gt::gt(
+      gt(
         rowname_col = "facility_sub_type",
         groupname_col = "facility_type",
-        #    rownames_to_stub = TRUE,
         id = "tbl_type"
       ) |>
       tab_header(
@@ -50,7 +47,6 @@ function(input, output, session) {
       cols_label(
         facility_type = "**Type**",
         facility_sub_type = "**Subtype**",
-        #  la_name = "**Council area**",
         Facilities = "**Facilities**",
         .fn = md
       ) |>
@@ -69,326 +65,340 @@ function(input, output, session) {
         ),
         fmt = ~ fmt_integer(.),
         missing_text = "",
-        side = "top"
+        side = "bottom"
       ) |>
       tab_stubhead(label = "Subtype") |>
+      tab_style( # Table title
+        style = cell_text(color = scotsport_text_colour),
+        locations = cells_title(groups = "title")
+      ) |>
       tab_style(
-        style = list(cell_text(
-          weight = "bold", size = "large",
+        style = cell_text(
+          weight = "bold",
+          size = "large",
+          color = scotsport_text_colour,
           align = "center"
-        )),
+        ),
         locations = cells_row_groups()
       ) |>
       tab_style(
         style = list(
-          cell_text(weight = "bold")
+          cell_text(
+            weight = "bold",
+            color = scotsport_text_colour
+          )
         ),
-        locations = list(cells_stubhead(), cells_stub_summary())
-      ) |>
-      tab_style(
-        style = list(
-          cell_text(weight = "bold") # ,
-          #   cell_fill(color = "grey95")
-        ),
-        locations = cells_summary(columns = Facilities)
+        locations = list(
+          cells_stubhead(),
+          cells_stub_summary(),
+          cells_column_labels(),
+          cells_summary(columns = Facilities)
+        )
       ) |>
       grand_summary_rows(
         columns = Facilities,
         fns = list(
-          label = md("**Total**"), id = "grand_summary_total",
+          label = md("**Total**"),
+          id = "grand_summary_total",
           fn = "sum"
         ),
         fmt = ~ fmt_integer(.),
         missing_text = "",
-        side = "top"
+        side = "bottom"
       ) |>
       tab_style(
-        style = list(
-          cell_text(weight = "bold") # ,
-          #      cell_fill(color = "grey80")
+        style = cell_text(
+          color = scotsport_text_colour,
+          weight = "bold"
         ),
-        locations = cells_grand_summary(columns = Facilities)
+        locations = list(
+          cells_grand_summary(),
+          cells_stub_grand_summary()
+        )
+      ) |>
+      cols_align(
+        align = "left",
+        columns = where(is.factor)
+      ) |>
+      opt_table_font(
+        font = list(
+          google_font(name = scotsport_table_font_family),
+          "Cochin", "serif"
+        )
       )
-  })
+  }) |>
+    bindCache(input$select_council)
 
-  towns_with_facilities <- reactive({
+  total_towns_with_facilities <- reactive({
     # How many towns have facilities
     towns <- scotland_areas() |>
       # For town calculations make all (Near) entries the same town
       mutate(town = stringr::str_remove(town, " (Near)")) |>
       distinct(town)
 
-    total <- nrow(towns)
-    # print("towns_with_facilities total=")
-    #  print(total)
+    total_towns <- nrow(towns)
 
-    return(total) # list(towns = towns, total = total))
-  })
+    return(total_towns)
+  }) |>
+    bindCache(input$select_council)
 
   selected_town <- reactive({
     sel_town <- input$select_town
     req(sel_town)
 
-    print("selected_town")
-    print(sel_town)
-    towns <- scotland_areas() |>
-      filter(town == sel_town) |>
-      drop_na(lng, lat)
-    print(head(towns))
-    towns
-  })
+    scotland_areas() |>
+      filter(town == sel_town)
+  }) |>
+    bindCache(input$select_town, input$select_council)
 
-  # sorted_selected_area_names <- reactive({
-  sorted_selected_area_names <- function() {
+  # Scotland choropleth data ---------------------------------------------------
+  scotland_choropleth <- reactive({
+    facilities_by_council_area <- scotland_areas() |>
+      count(la_name)
+
+    combined_council_info <- facilities_by_council_area |>
+      # Join the population info
+      inner_join(population_council, by = join_by(la_name == area_name)) |>
+      mutate(
+        people_per_facility = round(population / n, digits = 0),
+        .after = population
+      ) |>
+      # Join geospatial info
+      inner_join(df_council_boundaries,
+        by = join_by(la_name == local_authority)
+      ) |>
+      mutate(
+        hectares_per_facility = round(hectares / n, digits = 0),
+        .after = hectares
+      ) |>
+      rename(Facilities = n)
+
+    combined_council_info
+  }) |>
+    bindCache(input$select_council)
+
+  sorted_selected_area_names <- reactive({
     sort(input$select_council)
-  }
+  }) |>
+    bindCache(input$select_council)
 
-  # Outputs ----------------------------------------------------------------------
-  output$area_names_home <- renderText({
-    build_area_names(sorted_selected_area_names())
-  })
+  tbl_facility_detail <- reactive({
+    selected_council_name <- sorted_selected_area_names()
+    df_facility_detail <- scotland_areas() |>
+      # We are displaying addresses as if for mailing purposes
+      # Remove any "(Near)"
+      mutate(town = stringr::str_remove(town, "(Near)")) |>
+      dplyr::select(
+        name, address, facility_type, facility_sub_type,
+        town, postcode, la_name
+      ) |>
+      tidyr::unite("full_address",
+        c(name, address, town, postcode),
+        sep = paste0(", "),
+        remove = FALSE,
+        na.rm = TRUE
+      ) |>
+      mutate(facility_type = paste0(facility_type,
+        sep = ": ",
+        facility_sub_type
+      )) |>
+      relocate(full_address, .before = name) |>
+      relocate(la_name, .after = full_address) |>
+      select(-name, -address, -facility_sub_type, -town, -postcode) |>
+      arrange(full_address, la_name, facility_type) |>
+      # Work out how many of the same type at the same address
+      group_by(full_address, la_name, facility_type) |>
+      summarise(how_many = n()) |>
+      ungroup() |>
+      # Linebreak inside HTML table cell
+      mutate(full_address = stringr::str_replace_all(
+        full_address,
+        ",", ",<br />"
+      ))
 
-  output$area_names_types <- renderText({
+    df_facility_detail |>
+      gt(id = "facility_detail") |>
+      tab_header(
+        title = md("**Sports facilities by address**"),
+        subtitle = md(glue::glue("Council area: *{selected_council_name}*"))
+      ) |>
+      cols_label(
+        full_address = md("**Address**"),
+        la_name = md("**Council area**"),
+        facility_type = md("**Type**"),
+        how_many = md("**How many?**")
+      ) |>
+      cols_align(
+        align = "left",
+        columns = where(is.factor)
+      ) |>
+      opt_row_striping() |>
+      opt_table_font(
+        font = list(
+          google_font(name = scotsport_table_font_family),
+          "Cochin", "serif"
+        )
+      ) |>
+      opt_interactive(
+        use_compact_mode = TRUE,
+        use_filters = TRUE,
+        use_highlight = TRUE,
+        use_page_size_select = TRUE,
+        use_search = TRUE
+      )
+  }) |>
+    bindCache(input$select_council)
+
+  # For use in pulldown select
+  list_town_names <- reactive({
+    town_names <- scotland_areas() |>
+      count(town) |>
+      drop_na() |> # Need more data cleaning to identify missing towns
+      arrange(town)
+
+    l_town_names <- town_names$town
+    names(l_town_names) <- paste0(town_names$town, " (", town_names$n, ")")
+    l_town_names
+  }) |>
+    bindCache(scotland_areas())
+
+  # Outputs --------------------------------------------------------------------
+  output$home_area_names <- renderText({
     build_area_names(sorted_selected_area_names())
-  })
+  }) |>
+    bindCache(sorted_selected_area_names())
+
+  output$where_area_names <- renderText({
+    build_area_names(sorted_selected_area_names())
+  }) |>
+    bindCache(sorted_selected_area_names())
+
+  output$type_area_names <- renderText({
+    build_area_names(sorted_selected_area_names())
+  }) |>
+    bindCache(sorted_selected_area_names())
 
   output$total_facilities_areas <- renderText({
     scales::label_comma()(nrow(scotland_areas()))
-  })
+  }) |>
+    bindCache(scotland_areas())
 
   output$total_people_per_facility <- renderText({
     facilities_per_council <- scotland_areas() |>
       # How many facilities per council
       count(la_name)
 
+    # Join the population info with the facilities
     combined_council_info <- facilities_per_council |>
       inner_join(population_council, by = join_by(la_name == area_name))
-    # print(combined_council_info)
 
     # Population divided by number of facilities
     people_per_facility <- sum(combined_council_info$population) /
       sum(combined_council_info$n)
 
-    # selected_council_name <- input$select_council
-    # num_councils <- length(selected_council_name)
-    #
-    # # All Scotland
-    # people_per_facility <- 0
-    # if (num_councils == 0) {
-    #   # people_per_facility <- population_scotland / total_facilities_scotland
-    #   people_per_facility <- population_country$population / total_facilities_scotland
-    # } else {
-    #   num_facilities <- nrow(scotland_areas())
-    #
-    #   population_selected_councils <- population_council |>
-    #     filter(area_name %in% selected_council_name) |>
-    #     # rename(population = last_col()) |>
-    #     summarise(total_population = sum(population))
-    #
-    #   # print(population_selected_councils)
-    #
-    #   people_per_facility <- population_selected_councils$total_population /
-    #     num_facilities
-    # }
-
     scales::label_comma()(people_per_facility)
-  })
-  # people_per_facility <- population_scotland / total_facilities_scotland
+  }) |>
+    bindCache(scotland_areas())
 
-  output$total_towns_with_facilities <- renderText({
-    scales::label_comma()(towns_with_facilities())
-  })
+  output$home_total_towns_with_facilities <- renderText({
+    scales::label_comma()(total_towns_with_facilities())
+  }) |>
+    bindCache(total_towns_with_facilities())
 
-  output$plot_facility_type <- renderPlot(
-    {
-      # alt_text <- print(home_type())
-      df_type <- scotland_areas() |>
-        group_by(facility_type) |>
-        summarise(n = n()) |>
-        ungroup() |>
-        mutate(facility_type = fct_reorder(as.factor(facility_type), n,
-          .desc = FALSE
-        ))
+  output$where_total_towns_with_facilities <- renderText({
+    scales::label_comma()(total_towns_with_facilities())
+  }) |>
+    bindCache(total_towns_with_facilities())
 
-      # selected_council_name <- sort(input$select_council)
-      # area_names <- build_area_names(selected_council_name)
-      # print(area_names)
+  # Plots ----------------------------------------------------------------------
+  output$plot_facility_type <- renderPlot({
+    df_type <- scotland_areas() |>
+      group_by(facility_type) |>
+      summarise(n = n()) |>
+      ungroup() |>
+      mutate(facility_type = fct_reorder(facility_type, n, .desc = FALSE))
 
-      plot_facility_type(df_type)
-    }
-    # ,
-    # alt = reactive({
-    #   # code to add alt text goes here
-    # })
-  )
+    plot_facility_type(df_type)
+  }) |>
+    bindCache(scotland_areas())
 
   output$map_town <- renderLeaflet({
-    # renderMapview({
-    # renderUI({
-    # renderLeaflet({
+    # Need to have selected a town in order to see a map
+    req(input$select_town)
+
     town <- selected_town()
-    # filter((town$lng != Inf) & (town$lat != Inf))
-    req(town)
-
-    min_lng <- min(town$lng)
-    min_lat <- min(town$lat)
-    max_lng <- max(town$lng)
-    max_lat <- max(town$lat)
-
-    print("#############################################")
-    print(paste(min_lng, min_lat, max_lng, max_lat))
-
     town_types <- unique(town$facility_type)
 
-    pal <- # colorBin("Blues", domain = town_types, bins = length(town_types))
-      colorFactor("Blues",
-        # c("navy", "red", "yellow", "green",
-        #                    "navy", "red", "yellow", "green",
-        #                    "navy", "red", "yellow", "green"),
-        domain = town_types
-      )
-    print(pal)
-
-    mymap <- leaflet(data = town) |>
-      # Centre the empty map
-      # setView((max_lng - min_lng)/2, (max_lat - min_lat)/2, zoom = 18) |>
-
-      #  setMaxBounds(min_lng, min_lat, max_lng, max_lat) |>  # , options = list())
+    town_map <- town |>
+      leaflet() |>
       addTiles() |>
-      addScaleBar() |>
-      # # Add a legend to the map
-      # leaflet::addLegend(
-      #   "topright",
-      #   pal = pal,
-      #   values = town_types, #~facility_type,
-      #   title = "Type"
-      # ) |>
-      # leaflet::addProviderTiles("Esri.WorldStreetMap", group = "World Street Map") %>%
-      # leaflet::addProviderTiles("CartoDB.DarkMatter", group = "Dark Matter") %>%
-      # leaflet::addProviderTiles("Esri.WorldImagery", group = "World Imagery (satellite)") %>%
       addProviderTiles(
         provider = "Esri.WorldImagery",
         group = "World Imagery (satellite)"
       ) |>
-      fitBounds(min_lng, min_lat, max_lng, max_lat) |>
-      clearBounds() # world view
+      addMiniMap(
+        tiles = providers$Esri.WorldStreetMap,
+        position = "bottomleft",
+        toggleDisplay = TRUE
+      ) |>
+      addResetMapButton() |>
+      addScaleBar(position = "bottomright")
 
-    for (i in 1:length(town_types)) {
+    for (i in seq_along(town_types)) {
       group_data <- town[town$facility_type == town_types[i], ]
-      #    print(group_data)
+
       # Create the popup content
       popup_content <- paste0(
         "<table>",
-        "<tr><th>Name:</th><td>", htmltools::htmlEscape(group_data$name), "</td></tr>",
-        "<tr><th>Address:</th><td>", htmltools::htmlEscape(group_data$address), "</td></tr>",
-        "<tr><th>Town:</th><td>", htmltools::htmlEscape(group_data$town), "</td></tr>",
-        "<tr><th>Postcode:</th><td>", htmltools::htmlEscape(group_data$postcode), "</td></tr>",
-        "<tr><th>Council area:</th><td>", htmltools::htmlEscape(group_data$la_name), "</td></tr>",
+        "<tr><th>Name:</th><td>", htmltools::htmlEscape(group_data$name),
+        "</td></tr>",
+        "<tr><th>Address:</th><td>", htmltools::htmlEscape(group_data$address),
+        "</td></tr>",
+        "<tr><th>Town:</th><td>", htmltools::htmlEscape(group_data$town),
+        "</td></tr>",
+        "<tr><th>Postcode:</th><td>",
+        htmltools::htmlEscape(group_data$postcode), "</td></tr>",
+        "<tr><th>Council area:</th><td>",
+        htmltools::htmlEscape(group_data$la_name), "</td></tr>",
         "</table>",
         "<hr />",
         "<table>",
-        "<tr><th>Type:</th><td>", htmltools::htmlEscape(group_data$facility_type), "</td></tr>",
-        "<tr><th>Subtype:</th><td>", htmltools::htmlEscape(group_data$facility_sub_type), "</td></tr>",
-        "</table>" # ,
-        # "<hr />",
-        # "<table>",
-        # "<tr><th>Surface:</th><td>", htmltools::htmlEscape(group_data$surface), "</td></tr>",
-        # "<tr><th>Flood lights:</th><td>", htmltools::htmlEscape(group_data$flood_lights), "</td></tr>",
-        # "</table>"
+        "<tr><th>Type:</th><td>",
+        htmltools::htmlEscape(group_data$facility_type), "</td></tr>",
+        "<tr><th>Subtype:</th><td>",
+        htmltools::htmlEscape(group_data$facility_sub_type), "</td></tr>",
+        "<tr><th>Last update:</th><td>",
+        get_date(group_data$date_updated), "</td></tr>",
+        "</table>"
       )
 
-      mymap <- addMarkers(
-        map = mymap,
+      # Add the map pins and clusters
+      town_map <- addMarkers(
+        map = town_map,
         lng = group_data$lng,
         lat = group_data$lat,
-        #     layerId = NULL,
-        group = town_types[i], # htmltools::htmlEscape(group_data$facility_type),
-        #  #    icon = NULL,
-        popup = ~popup_content,
-        #     # popupOptions = NULL,
-        label = ~ htmltools::htmlEscape(group_data$name),
-        # #     labelOptions = NULL,
+        group = town_types[i],
+        popup = popup_content,
+        label = group_data$name,
         options = markerOptions(),
-        clusterOptions = markerClusterOptions(
-          removeOutsideVisibleBounds = TRUE,
-
-          # when you mouse over a cluster it shows the bounds of its markers
-          # showCoverageOnHover = TRUE
-
-          # when you click a cluster we zoom to its bounds
-          zoomToBoundsOnClick = TRUE
-
-          # when you click a cluster at the bottom zoom level we spiderfy it so you can see all of its markers
-          # spiderfyOnMaxZoom = TRUE,
-
-          # spiderLegPolylineOptions = list(weight = 1.5, color = "#222", opacity = 0.5),
-          # freezeAtZoom = FALSE,
-        )
-        # ,
-        # clusterId = NULL,
-        # data = getMapData(map)
+        clusterOptions =
+          markerClusterOptions(
+            # when you click a cluster we zoom to its bounds
+            zoomToBoundsOnClick = TRUE
+          )
       )
-
-
-      # # print(group_data)
-      # mymap <- addCircleMarkers(
-      #   map = mymap,
-      #   lng = group_data$lng,
-      #   lat = group_data$lat,
-      #   popup = ~popup_content,
-      #   label = htmltools::htmlEscape(group_data$name),
-      #   group = htmltools::htmlEscape(group_data$facility_type),
-      #   # radius = ~ sqrt(anount / 1000),
-      #   color = ~ pal(group_data$facility_type),
-      #   clusterOptions = markerClusterOptions(
-      #     removeOutsideVisibleBounds = TRUE,
-      #
-      #     # when you mouse over a cluster it shows the bounds of its markers
-      #     # showCoverageOnHover = TRUE
-      #
-      #     # when you click a cluster we zoom to its bounds
-      #     zoomToBoundsOnClick = TRUE
-      #
-      #     # when you click a cluster at the bottom zoom level we spiderfy it so you can see all of its markers
-      #     # spiderfyOnMaxZoom = TRUE,
-      #
-      #     # spiderLegPolylineOptions = list(weight = 1.5, color = "#222", opacity = 0.5),
-      #     # freezeAtZoom = FALSE,
-      #   ),
-      #   labelOptions = labelOptions(
-      #     noHide = FALSE,
-      #     direction = "auto"
-      #     #
-      #     # interactive = FALSE,
-      #     # clickable = NULL,
-      #     # noHide = NULL,
-      #     # permanent = FALSE,
-      #     # className = "",
-      #     # direction = "auto",
-      #     # offset = c(0, 0),
-      #     # opacity = 1,
-      #     # textsize = "10px",
-      #     # textOnly = FALSE,
-      #     # style = NULL,
-      #     # zoomAnimation = NULL,
-      #     # sticky = TRUE,
-      #   )
-      # )
     }
+
     # For controlling showing/hiding layers
-    mymap <- addLayersControl(
-      map = mymap,
+    town_map <- addLayersControl(
+      map = town_map,
       baseGroups = c(
-        "OSM (default)",
-        #       "Positron (minimal)",
-        #   "World Street Map",
-        #  "Dark Matter",
+        "Open Street Map (default)",
         "World Imagery (satellite)"
       ),
-      overlayGroups = town_types, # "Types"), #1:length(town_types)),
-      # position = "topright",
+      overlayGroups = town_types,
       options = layersControlOptions(
-        collapsed = TRUE,
+        collapsed = FALSE,
 
         # if TRUE, the control will automatically maintain the z-order of its
         # various groups as overlays are switched on and off.
@@ -396,50 +406,113 @@ function(input, output, session) {
       )
     )
 
-    mymap
+    town_map
+  }) |>
+    bindCache(selected_town())
 
-    # town |>
-    # leaflet()  |>
-    #   addTiles() |>   # Add default OpenStreetMap map tiles
-    #   #   addLegend(pal = pal, values = ~vble, opacity = 0.8)
-    #   # addMiniMap()
-    #
-    #   addMarkers(lng=174.768, lat=-36.852, popup="The birthplace of R")
-  })
+  # Scotland Choropleths plots -------------------------------------------------
+  # Scotland by number of facilities
+  output$plot_scotland_area_facilities <- renderPlot({
+    plot_facilties_scotland(scotland_choropleth(),
+      feature_cols = "Facilities",
+      label_fill = "Facilities",
+      plot_title = "Facilities by council area"
+    )
+  }) |>
+    bindCache(scotland_choropleth())
 
+  # Scotland by number of people per facility
+  output$plot_scotland_area_people <- renderPlot({
+    plot_facilties_scotland(scotland_choropleth(),
+      feature_cols = "people_per_facility",
+      label_fill = "People per facility",
+      plot_title = "People per facility by council area"
+    )
+  }) |>
+    bindCache(scotland_choropleth())
 
-  # plot helper functions --------------------------------------------------------
+  output$facility_type_table <- render_gt({
+    tbl_facility_subtype_count()
+  }) |>
+    bindCache(tbl_facility_subtype_count())
+
+  output$facility_detail_table <- render_gt({
+    tbl_facility_detail()
+  }) |>
+    bindCache(tbl_facility_detail())
+
+  output$ui_select_town <- renderUI({
+    selectizeInput("select_town",
+      label = strong("Town (number of facilities):"),
+      choices = c(
+        "Choose a town   " = "",
+        list_town_names()
+      ),
+      # This helps selectize go wider
+      # https://stackoverflow.com/questions/76431862/how-can-i-make-a-shiny-selectinput-overflow-a-bslibnavset-card-pill
+      options = list(dropdownParent = "body"),
+      width = "100%",
+      multiple = FALSE
+    )
+  }) |>
+    bindCache(list_town_names())
+
+  # plot helper functions ------------------------------------------------------
   plot_facility_type <- function(df,
-                                 plot_title = "Facilites by Type",
+                                 plot_title = "Facilites by type",
                                  plot_fill_bar_chart = "dodgerblue4") {
     df |>
       ggplot(aes(x = facility_type, y = n)) +
       geom_col(fill = plot_fill_bar_chart) +
-      # +
-      #   geom_text(aes(label = paste0(scales::label_comma()(n), " (", ")"),
-      #                 y = n + 0.05),
-      #             colour = "white",
-      #             position = position_stack(vjust = 0.5),
-      #             #  vjust = 0
-      #   ) +
-      #   coord_flip() +
       scale_y_continuous(labels = scales::label_comma()) +
-      theme_minimal(base_size = 16) +
-      #          base_family = "Source Sans Pro"
+      coord_flip() +
       labs(
         title = plot_title,
         x = element_blank(),
-        y = element_blank()
-        #    alt = "A bar chart titled ..."
+        y = element_blank(),
+        alt = paste0(
+          "A map showing the location of the facilities in the ",
+          "selected town. You can access text data of towns in the Address ",
+          "section"
+        )
       ) +
-      theme(
-        #    legend.position = "none",
-        #   panel.grid = element_blank()
-      ) +
-      coord_flip()
+      theme_minimal(base_size = scotsport_default_font_size) +
+      theme(text = element_text(
+        family = scotsport_default_font_family,
+        colour = scotsport_text_colour
+      ))
   }
 
-  # Helper functions
+  # Choropleth map of Scotland -------------------------------------------------
+  plot_facilties_scotland <- function(df, feature_cols, label_fill,
+                                      plot_title) {
+    df |>
+      ggplot() +
+      # Do empty outline
+      geom_sf(data = df_council_boundaries, aes(geometry = geometry)) +
+
+      # Coloured selected councils
+      geom_sf(aes(
+        fill = .data[[feature_cols]],
+        geometry = geometry
+      )) +
+      theme_void(base_size = scotsport_default_font_size) +
+      theme(text = element_text(
+        family = scotsport_default_font_family,
+        colour = scotsport_text_colour
+      )) +
+      # Lato, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      # "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji",
+      # "Segoe UI Emoji", "Segoe UI Symbol"
+      # make the lower numbers lighter
+      scale_fill_viridis(direction = -1) +
+      labs(
+        fill = label_fill,
+        title = plot_title
+      )
+  }
+
+  # Helper functions -----------------------------------------------------------
   build_area_names <- function(selected_council_name) {
     num_councils <- length(selected_council_name)
 
@@ -451,177 +524,4 @@ function(input, output, session) {
     }
     return(areas)
   }
-
-  # Downloadable csv of selected dataset ----
-  output$downloadData <- downloadHandler(
-    filename = function() {
-      #    paste(input$dataset, ".csv", sep = "")
-    },
-    content = function(file) {
-      #     write_csv(datasetInput(), file, row.names = FALSE)
-    }
-  )
-
-
-  # Old ############################################################################
-
-  # home_type <- reactiveVal(df_type)
-  # home_type_council <- reactiveVal(df_type_council)
-
-  total_councils <- reactive({
-    selected_council_name <- input$select_council
-    num_councils <- length(selected_council_name)
-    count_councils <- df_sports_facilities_scotland |>
-      group_by(la_name)
-
-    total_councils <- 0
-
-    if (num_councils > 0) {
-      count_councils <- count_councils |>
-        filter(la_name %in% selected_council_name)
-      total_councils <- nrow(count_councils)
-    } else {
-      # home_type(df_type)
-    }
-    return(total_councils)
-  })
-
-  ### OLD ########################################################################
-
-  plot_type_council <- function(df,
-                                caption = caption_source_sport_scotland,
-                                fill = "dodgerblue4") {
-    filter_councils <- input$select_council
-    num_councils <- length(filter_councils)
-
-    df_plot <- df
-    if (num_councils > 0) {
-      print(filter_councils)
-      print(names(df_plot))
-      df_plot <- df_plot |>
-        filter(la_name %in% filter_councils)
-    }
-
-    # print(df_plot, n = Inf)
-    sorted_facilities <- df_plot |>
-      group_by(facility_type) |>
-      summarise(n = sum(n)) |>
-      ungroup() |>
-      mutate(facility_type = fct_reorder(
-        as.factor(facility_type),
-        n
-      ))
-    # print(sorted_facilities, n = Inf)
-
-    sorted_facilities |>
-      ggplot(aes(x = facility_type, y = n)) +
-      geom_col(fill = fill) +
-      # geom_text(
-      #   mapping = aes(label = round(n, 0)),
-      #   position = position_dodge(width = 0.7),
-      #   hjust = 1.5,
-      #   size = 6,
-      #   fontface = "bold",
-      #   colour = "white"
-      # ) +
-      coord_flip() +
-      theme_minimal(
-        # base_size = 16,
-        #          base_family = "Source Sans Pro"
-      ) +
-      scale_y_continuous(
-        labels = scales::label_comma()
-      ) +
-      labs(
-        title = "Facilites per Type",
-        x = element_blank(),
-        y = "Facilities",
-        caption = caption,
-        alt = "A bar chart titled ..."
-      ) +
-      theme(
-        legend.position = "none",
-        # panel.grid.major.x = element_blank(),
-        # panel.grid.minor.x = element_blank(),
-        # panel.grid.minor.y = element_blank()
-        panel.grid = element_blank()
-      )
-    #  plot.title = element_textbox_simple(face = "bold"))
-  }
-
-  gt_tbl_facility_detail <- reactive({
-    my_council_name <- sort(input$select_council)
-
-    # df_scotland_areas <- scotland_areas()
-    # print(nrow(df_scotland_areas))
-
-    my_sep <- paste0(", ", br())
-
-    #   print(names(df_scotland_areas))
-    #  print(names(df_sports_facilities_scotland))
-
-    df_facility_detail <- scotland_areas() |>
-      # df_facility_detail <-df_sports_facilities_scotland |>
-      # We are displaying addresses as if for mailing purposes
-      # Remove any "(Near)"
-      mutate(town = stringr::str_remove(town, "(Near)")) |>
-      dplyr::select(
-        name, address, facility_type, facility_sub_type,
-        town, postcode, la_name
-      ) |>
-      #  df_facility_detail <- df_facility_detail |>
-      tidyr::unite("full_address",
-        c(name, address, town, postcode),
-        sep = my_sep,
-        remove = FALSE,
-        na.rm = TRUE
-      ) |>
-      mutate(facility_type = paste0(facility_type, sep = ": ", facility_sub_type)) |>
-      relocate(full_address, .before = name) |>
-      relocate(la_name, .after = full_address) |>
-      select(-name, -address, -facility_sub_type, -town, -postcode) |>
-      arrange(full_address, la_name, facility_type)
-
-    df_facility_detail <- df_facility_detail |>
-      group_by(full_address, la_name, facility_type) |>
-      summarise(how_many = n()) |>
-      ungroup()
-
-    df_facility_detail |>
-      # gt(rowname_col = "row",
-      #    groupname_col = "full_address",
-      #    row_group_as_column = TRUE
-      #    ) |>
-      gt() |>
-      tab_header(
-        title = md("**Sports facilities by address**"),
-        subtitle = md(glue::glue("Council area: *{my_council_name}*"))
-      ) |>
-      cols_label(
-        full_address = md("**Address**"),
-        la_name = md("**Council area**"),
-        facility_type = md("**Type**"),
-        how_many = md("**How many?**")
-      ) |>
-      # cols_align(align = "center") |>
-      opt_row_striping() |>
-      #  opt_stylize(style = 6, color = "blue") |>
-      opt_interactive(
-        use_compact_mode = TRUE,
-        use_search = TRUE,
-        use_highlight = TRUE,
-        use_page_size_select = TRUE
-      )
-  })
-
-  output$facility_type_table <- render_gt(
-    {
-      tbl_facility_subtype_count()
-    }
-    # expr = gt_tbl_facility_type()
-  )
-
-  output$facility_detail_table <- render_gt({
-    gt_tbl_facility_detail()
-  })
 }
