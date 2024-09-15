@@ -106,6 +106,15 @@ The main dashboard is in file `index.qmd`
 See [Running Documents](https://quarto.org/docs/interactive/shiny/running.html)
 for different ways of running the document.
 
+### Source code:
+
+<https://github.com/dataquine/scotsport>
+
+The code to the dashboard is released under an MIT license.
+
+N.B. If you reuse the data make sure you abide by the terms of the Data sources 
+listed above and display any required credit.
+
 ### Source data
 
 If you wish to download the original source data used by this project you can run the original cleaning scripts by running the following Quarto profile. This will try and download the source data to the `data-raw` folder.
