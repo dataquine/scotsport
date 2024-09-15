@@ -46,3 +46,21 @@ h2, .h2,  h3, .h3 {
 .quarto-dashboard #quarto-dashboard-header .navbar .navbar-nav .active{
   background-color: #0000AA;
 }
+
+// Workarounds for styling gt in interactive mode, interactive changes
+
+// These two are for the Address table
+// tables to divs so things like tab_style no longer work
+#facility_detail div.gt_heading.gt_title.gt_font_normal
+{
+  color: $blue;
+}
+
+// Column headers
+#facility_detail div.rt-tr.rt-tr-header{
+  color: $blue;
+}
+
+#select_town {
+  width:400px;
+}
