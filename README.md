@@ -2,7 +2,7 @@
 
 ## About app
 
-[Sport Scotland](https://sportscotland.org.uk/) - the national agency for sport
+[Sportscotland](https://sportscotland.org.uk/) - the national agency for sport
 in Scotland has recorded the locations of sports facilities in Scotland and made
 that data available as an 
 [open data dataset](https://data.spatialhub.scot/dataset/sports_facilities-unknown). 
@@ -114,5 +114,7 @@ If you wish to download the original source data used by this project you can ru
 ```         
 quarto render --profile download
 ```
+---
 
+[1] Please note the author of this app has no connection with the Sportscotland 
 organisation.
