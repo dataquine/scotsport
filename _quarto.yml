@@ -2,3 +2,7 @@ project:
   title: "ScotSport - sports facilities in Scotland"
   render:
     - index.qmd
+  resources:
+    - "css/"
+    - "data/"
+    - "images/"
