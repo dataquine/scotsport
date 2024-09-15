@@ -112,5 +112,5 @@ scotsport_text_colour <- "#000099"
 scotsport_vbbackground_colour <- "#e6f2fd"
 scotsport_value_box_theme <- bslib::value_box_theme(
   fg = scotsport_text_colour,
-  bg = scotsport_valuebox_background_colour
+  bg = scotsport_vbbackground_colour
 )
