@@ -6,31 +6,34 @@
 
 # Libraries --------------------------------------------------------------------
 
-library(bslib) # Custom 'Bootstrap' 'Sass' Themes for 'shiny' and 'rmarkdown'
-library(bsicons) # Easily Work with 'Bootstrap' Icons
-library(dplyr) # A Grammar of Data Manipulation
-library(forcats) # Tools for Working with Categorical Variables (Factors)
-library(ggplot2) # Create Elegant Data Visualisations Using the Grammar of Graphics
-library(ggtext) # Improved Text Rendering Support for 'ggplot2'
-library(glue) # Interpreted String Literals
-library(gt) # Easily Create Presentation-Ready Display Tables
-library(here) # A Simpler Way to Find Your Files
-library(htmltools) # Tools for HTML
-library(leaflet) # Create Interactive Web Maps with the JavaScript 'Leaflet' Library
-library(mapview) # Interactive Viewing of Spatial Data in R
-library(readr) # Read Rectangular Text Data
-library(markdown) # Render Markdown with 'commonmark'
-library(scales) # Scale Functions for Visualization
-library(sf) # Simple Features for R
-library(shiny) # Web Application Framework for R
-library(stringr) # Simple, Consistent Wrappers for Common String Operations
-library(tidyr) # Tidy Messy Data
-library(viridis) # Colorblind-Friendly Color Maps for R
-
+suppressPackageStartupMessages({
+  library(bslib) # Custom 'Bootstrap' 'Sass' Themes for 'shiny' and 'rmarkdown'
+  library(bsicons) # Easily Work with 'Bootstrap' Icons
+  library(dplyr) # A Grammar of Data Manipulation
+  library(forcats) # Tools for Working with Categorical Variables (Factors)
+  library(ggplot2) # Create Elegant Data Visualisations Using the Grammar of Graphics
+  library(ggtext) # Improved Text Rendering Support for 'ggplot2'
+  library(glue) # Interpreted String Literals
+  library(gt) # Easily Create Presentation-Ready Display Tables
+  library(here) # A Simpler Way to Find Your Files
+  library(htmltools) # Tools for HTML
+  library(leaflet) # Create Interactive Web Maps with the JavaScript 'Leaflet' Library
+  library(leaflet.extras) # Extra Functionality for 'leaflet' Package
+  library(readr) # Read Rectangular Text Data
+  library(markdown) # Render Markdown with 'commonmark'
+  library(scales) # Scale Functions for Visualization
+  library(sf) # Simple Features for R
+  library(shiny) # Web Application Framework for R
+  library(showtext) # Using Fonts More Easily in R Graphs
+  library(stringr) # Simple, Consistent Wrappers for Common String Operations
+  library(tidyr) # Tidy Messy Data
+  library(viridis) # Colorblind-Friendly Color Maps for R
+})
 
 # Constants --------------------------------------------------------------------
 
-filename_scotland_sports_facilities_csv <- "scotland-sports-facility.csv"
+#filename_scotland_sports_facilities_csv <- "scotland-sports-facility.csv"
+filename_scotland_sports_facilities_rds <- "scotland-sports-facility.rds"
 filename_population_rds <- "scotland-population.rds"
 filename_council_bounary_rds <- "scotland-council-boundary.rds"
 
@@ -38,8 +41,11 @@ caption_source_sport_scotland <- "Sport Scotland"
 
 # Read data --------------------------------------------------------------------
 
-df_sports_facilities_scotland <- readr::read_csv(
-  here::here("data", filename_scotland_sports_facilities_csv)
+# df_sports_facilities_scotland <- readr::read_csv(
+#   here::here("data", filename_scotland_sports_facilities_csv)
+# )
+df_sports_facilities_scotland <- readr::read_rds(
+  here::here("data", filename_scotland_sports_facilities_rds)
 )
 
 df_population_scotland <- readr::read_rds(
@@ -63,8 +69,8 @@ total_facilities_scotland <- nrow(df_sports_facilities_scotland)
 latest_update <- max(df_sports_facilities_scotland$date_updated)
 
 # Date to show to user
-#date_updated <- get_date(latest_update)
-#format(latest_update, format = "%d %B %Y")
+# date_updated <- get_date(latest_update)
+# format(latest_update, format = "%d %B %Y")
 
 # Unique council area names ----------------------------------------------------
 council_areas <- df_sports_facilities_scotland |>
@@ -78,8 +84,8 @@ town_names <- df_sports_facilities_scotland |>
   drop_na() |> # Need more data cleaning to identify missing towns
   arrange(town)
 
-  list_town_names <-  town_names$town
-  names(list_town_names) = paste0(town_names$town, " (", town_names$n,")")
+list_town_names <- town_names$town
+names(list_town_names) <- paste0(town_names$town, " (", town_names$n, ")")
 
 # Population -------------------------------------------------------------------
 population_country <- df_population_scotland |>
@@ -96,3 +102,24 @@ get_date <- function(str_date) {
 
 # Date that facilities dataset was last updated
 date_updated <- get_date(latest_update)
+
+# Font -------------------------------------------------------------------------
+
+scotsport_default_font_family <- "lato"
+scotsport_default_font_size <- 14
+
+## Loading Google fonts (https://fonts.google.com/)
+font_add_google("Lato", scotsport_default_font_family)
+
+scotsport_table_font_family <- "Lato"
+
+
+## Automatically use showtext to render text
+showtext_auto()
+
+# Colours ----------------------------------------------------------------------
+
+scotsport_text_colour <- "#000099"
+scotsport_value_box_theme <- value_box_theme(fg = scotsport_text_colour,
+                                             bg = "#e6f2fd")
+
