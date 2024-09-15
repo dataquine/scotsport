@@ -41,21 +41,8 @@ h2, .h2,  h3, .h3 {
   color: $blue;
 }
 
+// This appears in the backgroup navbar when page selected in menu
+// This is slightly lighter than the normal navbar for highlighting
 .quarto-dashboard #quarto-dashboard-header .navbar .navbar-nav .active{
   background-color: #0000AA;
- // # #0000c2
-}
-
-// gt tables
-//Table title
-//.gt_group_heading
-#tbl_type .gt_title {
-   color: #f00 // $blue;
-
-}
-
-
-#tbl_type .gt_table {
-     color: #ff0 // $blue;
-
 }
