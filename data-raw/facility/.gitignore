@@ -1,0 +1,11 @@
+# Placeholder for facility data
+# This is where each individual sports facility type of data will be downloaded
+# to prior to cleaning.
+# This data comes from Sport Scotland via
+# Spatial Hub Scotland: Sports Facilities - Scotland
+# https://data.spatialhub.scot/dataset/sports_facilities-unknown
+# https://stackoverflow.com/questions/4250063/how-to-gitignore-all-files-folder-in-a-folder-but-not-the-folder-itself
+# Keep folder structure but not files
+
+*
+!.gitignore

@@ -1,0 +1,8 @@
+# Placeholder for raw data folder
+# This is where the data downloaded from third party sources will be stored
+# prior to cleaning scripts
+# https://stackoverflow.com/questions/4250063/how-to-gitignore-all-files-folder-in-a-folder-but-not-the-folder-itself
+# Keep folder structure but not files
+
+*
+!.gitignore
