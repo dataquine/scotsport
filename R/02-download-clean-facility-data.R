@@ -92,7 +92,7 @@ filename_scotland_sports_facility_csv <- "scotland-sports-facility.csv"
 # Downloading ------------------------------------------------------------------
 
 # For switching off during dev
-DO_DOWNLOAD <- FALSE
+DO_DOWNLOAD <- TRUE
 
 #' download_facility_data
 #'
@@ -446,7 +446,7 @@ df_scotland_sports_facility_clean$town[df_scotland_sports_facility_clean$id == "
 # Abernethy Bowling Club (Nethy Bridge)m pub_spfbg.740 should be Highland
 
 df_scotland_sports_facility_clean$la_name[df_scotland_sports_facility_clean$id == "pub_spfbg.740"] <- "Highland"
-df_scotland_sports_facility_clean[df_scotland_sports_facility_clean$id == "pub_spfbg.740",]
+#df_scotland_sports_facility_clean[df_scotland_sports_facility_clean$id == "pub_spfbg.740",]
 
 #glimpse(df_scotland_sports_facility_clean)
 #View(df_scotland_sports_facility_clean)
@@ -469,7 +469,7 @@ write_rds(
 )
 
 rm(df_scotland_sports_facility_combined)
-#rm(df_scotland_sports_facility_clean)
+rm(df_scotland_sports_facility_clean)
 rm(df_facility_types)
 rm(df_long_lat_facility)
 rm(df_facility_type_info)
