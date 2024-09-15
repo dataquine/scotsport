@@ -16,3 +16,5 @@ _scratch/
 # Apple
 .DS_Store
 
+# Publishing scripts
+deploy/
