@@ -56,9 +56,11 @@ time of initial publication, September 2024, I am seeking data-related
 employment in Glasgow or fully remote UK.
 
 **Contact:** 
-[LinkedIn](https://www.linkedin.com/in/lesleyduff/) | 
-**Mastodon:** [datasci.social/\@scottish](https://datasci.social/@scottish) | 
-**GitHub:** [dataquine](https://github.com/dataquine)
+
+* [LinkedIn](https://www.linkedin.com/in/lesleyduff/)
+* **GitHub:** [dataquine](https://github.com/dataquine)
+* **Mastodon:** [datasci.social/\@scottish](https://datasci.social/@scottish)
+* **email:** projects@dataquine.dev
 
 ## Background
 
