@@ -1,0 +1,61 @@
+/* ScotSport custom CSS
+  Want the colour scheme to be blue rather than dark and green links
+*/
+
+/*-- scss:defaults --*/
+// Make a Scottish theme more blue by default
+$blue:         #000099 !default;
+$link-color:  $blue !default;
+
+// Slightly smaller
+$h1-font-size:                2.0rem !default;
+$h2-font-size:                1.5rem !default;
+$h3-font-size:                1.2rem !default;
+
+//$bslib-value-box-horizontal-break-point: 1px;
+
+/*-- scss:rules --*/
+// These are used in the About page
+
+h1, .h1 {
+  margin-top: 0px;
+  color: $blue;
+}
+
+h2, .h2,  h3, .h3 {
+  margin-top: 1em;
+  color: $blue;
+}
+
+// Reduce the size of the numbers in the valuebox. Make text bold
+.quarto-dashboard .bslib-value-box .value-box-value{
+  //font-size: clamp(.1em,15cqw,5em);
+ // font-size: 1.5em;
+  font-size: 16pt;
+ // font-weight: bold;
+  color: $blue;
+}
+
+.quarto-dashboard .bslib-value-box .value-box-title{
+  //font-weight: bold;
+  color: $blue;
+}
+
+.quarto-dashboard #quarto-dashboard-header .navbar .navbar-nav .active{
+  background-color: #0000AA;
+ // # #0000c2
+}
+
+// gt tables
+//Table title
+//.gt_group_heading
+#tbl_type .gt_title {
+   color: #f00 // $blue;
+
+}
+
+
+#tbl_type .gt_table {
+     color: #ff0 // $blue;
+
+}
