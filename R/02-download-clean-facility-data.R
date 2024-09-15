@@ -384,7 +384,7 @@ df_scotland_sports_facility_clean$town[df_scotland_sports_facility_clean$name ==
 
 # Bannatyne Health Club Inverness, town=Inverness, missing postcode in one
 # https://www.bannatyne.co.uk/health-club/inverness, The Inshes Retail & Leisure Park, Inverness, IV2 3TW
-df_scotland_sports_facility_clean$town[df_scotland_sports_facility_clean$name == "Bannatyne Health Club Inverness"] <- "Glasgow"
+df_scotland_sports_facility_clean$town[df_scotland_sports_facility_clean$name == "Bannatyne Health Club Inverness"] <- "Inverness"
 df_scotland_sports_facility_clean$postcode[df_scotland_sports_facility_clean$name == "Bannatyne Health Club Inverness"] <- "IV2 3TW"
 #df_scotland_sports_facility_clean[df_scotland_sports_facility_clean$name == "Bannatyne Health Club Inverness",]
 
@@ -406,6 +406,41 @@ df_scotland_sports_facility_clean$town[df_scotland_sports_facility_clean$name ==
 df_scotland_sports_facility_clean$postcode[df_scotland_sports_facility_clean$name == "Aviemore Activity Centre"] <- "PH22 1PN"
 df_scotland_sports_facility_clean[df_scotland_sports_facility_clean$name == "Aviemore Activity Centre",]
 
+# Abbeyhill Primary School, pub_spfsp.135, missing postcode - same as pub_spfsh.2074
+df_scotland_sports_facility_clean$postcode[df_scotland_sports_facility_clean$id == "pub_spfsp.135"] <- "EH7 5SJ"
+#df_scotland_sports_facility_clean[df_scotland_sports_facility_clean$name == "Abbeyhill Primary School",]
+
+# Abercorn School (ASN),  missing postcode pub_spfsp.309 -same as pub_spfsh.661
+df_scotland_sports_facility_clean$postcode[df_scotland_sports_facility_clean$id == "pub_spfsp.309"] <- "G4 9QH"
+#df_scotland_sports_facility_clean[df_scotland_sports_facility_clean$name == "Abercorn School (ASN)",]
+
+# Aberdeen Altens Hotel, pub_spfsp.17 missing postcode  -same as pub_spffs.1
+df_scotland_sports_facility_clean$postcode[df_scotland_sports_facility_clean$id == "pub_spfsp.17"] <- "AB12 3LF"
+#df_scotland_sports_facility_clean[df_scotland_sports_facility_clean$name == "Aberdeen Altens Hotel",]
+
+# Aberdeen Aquatics Centre, postcode missing on two, Linksfield Road AB24 5RU
+# https://www.aberdeensportsvillage.com/aquatics
+df_scotland_sports_facility_clean$postcode[df_scotland_sports_facility_clean$name == "Aberdeen Aquatics Centre"] <- "AB24 5RU"
+#df_scotland_sports_facility_clean[df_scotland_sports_facility_clean$name == "Aberdeen Aquatics Centre",]
+
+# Aberdeen Grammar School,pub_spfsp.10  missing postcode  -same as pub_spfsh.2948
+df_scotland_sports_facility_clean$postcode[df_scotland_sports_facility_clean$id == "pub_spfsp.10"] <- "AB10 1HT"
+#df_scotland_sports_facility_clean[df_scotland_sports_facility_clean$name == "Aberdeen Grammar School",]
+
+# Fix Town ---------------------------------------------------------------------
+
+# Arisaig Playing Field,pub_spfp.2909, town name ARISAIGArisaig = Arisaig
+#https://www.arisaigcommunitytrust.org.uk/projects/playing-fields/
+df_scotland_sports_facility_clean$town[df_scotland_sports_facility_clean$id == "pub_spfp.2909"] <- "Arisaig"
+#df_scotland_sports_facility_clean[df_scotland_sports_facility_clean$id == "pub_spfp.2909",]$town
+
+# Auchterhouse Primary School, pub_spfp.513, stray comma after name in town
+df_scotland_sports_facility_clean$town[df_scotland_sports_facility_clean$id == "pub_spfp.513"] <- "Auchterhouse"
+#df_scotland_sports_facility_clean[df_scotland_sports_facility_clean$id == "pub_spfp.513",]$town
+
+# Birkhill,, stray comma after name in town
+df_scotland_sports_facility_clean$town[df_scotland_sports_facility_clean$id == "pub_spfp.514"] <- "Birkhill"
+#df_scotland_sports_facility_clean[df_scotland_sports_facility_clean$id == "pub_spfp.514",]$town
 
 #glimpse(df_scotland_sports_facility_clean)
 #View(df_scotland_sports_facility_clean)
