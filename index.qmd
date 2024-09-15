@@ -1,0 +1,171 @@
+---
+title: "ScotSport - sports facilities in Scotland"
+format: 
+  dashboard:
+    orientation: rows
+    scrolling: true
+    link-external-icon: true
+    link-external-newwindow: true
+    logo: images/scotsport-arthur-montford-houndstooth.png
+    favicon: images/favicon.ico
+    nav-buttons: 
+      - icon: github
+        href: https://github.com/dataquine/scotsport
+    theme:
+      light: [flatly, css/custom.scss]
+      dark: [darkly, css/custom.scss]
+server: shiny
+date: today
+include-in-header:
+  # Workaround for favicon
+  text: |
+    <link rel="shortcut icon" href="images/favicon.ico" type="image/x-icon" />
+    <link rel="icon" href="images/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="images/favicon-16x16.png" sizes="16×16">
+    <link rel="icon" href="images/favicon-32x32.png" sizes="32×32">
+    <link rel="icon" href="images/android-chrome-192x192.png" type="image/png" sizes="192x192">
+    <link rel="icon" href="images/android-chrome-512x512.png" type="image/png" sizes="512x512">
+    <link rel="apple-touch-icon" href="images/apple-touch-icon.png" sizes="180x180">
+---
+# {.sidebar}
+
+**Last update:** `r date_updated`
+---
+
+```{r}
+#| label: sidebar
+selectInput("select_council", strong("Council areas:"),
+  c("Choose one or more" = "", council_areas),
+  multiple = TRUE
+)
+```
+---
+People per facility based on estimated population in 
+**`r population_country$year`**
+
+# Overview
+
+## Row 
+
+::: {.card .flow expandable=false}
+
+`r textOutput ("home_area_names", inline = TRUE)`
+
+:::
+
+## Row
+
+### Col {width=35%}
+
+```{r}
+#| label: total_facilities_areas
+value_box(
+  id = "valuebox_total_facilities_areas",
+  title = "Total facilities",
+  value = textOutput("total_facilities_areas", inline = TRUE),
+  showcase = bs_icon("building"),
+  showcase_layout = "left center",
+  theme = scotsport_value_box_theme,
+  class = "border"
+)
+```
+```{r}
+#| label: total_people_per_facility
+value_box(
+  title = "People per facility",
+  value = textOutput("total_people_per_facility", inline = TRUE),
+  showcase = bs_icon("person"),
+  showcase_layout = "left center",
+  theme = scotsport_value_box_theme,
+  class = "border"
+)
+```
+```{r}
+#| label: home_total_towns_with_facilities
+value_box(
+  title = "Towns with facilities",
+  value = textOutput("home_total_towns_with_facilities", inline = TRUE),
+  showcase = bs_icon("bank"),
+  showcase_layout = "left center",
+  theme = scotsport_value_box_theme,
+  class = "border"
+)
+```
+
+### Col {width=65%}
+
+### {.tabset}
+
+```{r}
+#| label: facilities
+#| title: "Facilities"
+#| padding: 0px
+#| expandable: true
+plotOutput("plot_scotland_area_facilities")
+```
+```{r}
+#| label: people
+#| title: "People"
+#| padding: 0px
+#| expandable: true
+plotOutput("plot_scotland_area_people")
+```
+
+# Where
+
+::: {.card .flow expandable=false}
+`r textOutput ("where_area_names", inline = TRUE)`
+
+**`r textOutput("where_total_towns_with_facilities", inline=TRUE)`** towns have
+at least one facility. Choose a town to see a map. All locations are 
+approximate. Click on pins to see more detail about the facility or circles with
+numbers to see more facilities. +/- to zoom in/out.
+:::
+
+```{r}
+#| content: card-toolbar
+#| label: select-town
+uiOutput("ui_select_town")
+```
+
+```{r}
+#| label: leaflet-map-town
+#| padding: 0px
+#| expandable: true
+#| fig-alt: "TODO"
+leafletOutput("map_town")
+```
+
+# Type
+
+`r textOutput ("type_area_names", inline = TRUE)`
+
+## {.tabset}
+
+```{r}
+#| label: type-plot
+#| title: "Type"
+plotOutput("plot_facility_type")
+```
+```{r}
+#| label: type-subtype-table
+#| title: "Subtype"
+gt::gt_output(outputId = "facility_type_table")
+```
+
+# Address 
+
+```{r}
+#| label: address-table
+#| padding: 0.5em
+gt::gt_output(outputId = "facility_detail_table")
+```
+
+# About
+
+```{r}
+#| label: about-markdown
+#| fill: false
+# Reuse the same readme file for the repository
+htmltools::includeMarkdown("README.md")
+```
