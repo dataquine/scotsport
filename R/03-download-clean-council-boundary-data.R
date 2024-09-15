@@ -28,6 +28,7 @@ library(readr)
 url_council_boundary_data_source <- "https://geo.spatialhub.scot/geoserver/sh_las/wfs?service=WFS&authkey=964e5ffb-92a9-47da-9dd0-c634eb1c7364&request=GetFeature&typeName=sh_las:pub_las&format_options=filename:Local_Authority_Boundaries_-_Scotland&outputFormat=application/json"
 
 filename_council_bounary_json <- "scotland-council-boundary.json"
+filename_council_bounary_csv <- "scotland-council-boundary.csv"
 filename_council_bounary_rds <- "scotland-council-boundary.rds"
 
 # Downloading ------------------------------------------------------------------
@@ -90,6 +91,13 @@ if (download_council_boundary_code == 0) {
 #  View(df_scotland_council_boundary_clean)
 
   # write-council-boundary-data ------------------------------------------------
+  # Write human readable CSV
+  readr::write_csv(
+    df_scotland_council_boundary_clean,
+    here::here("data", filename_council_bounary_csv)
+  )
+
+  # Write RDS for Shiny app
   readr::write_rds(
     df_scotland_council_boundary_clean,
     here::here("data", filename_council_bounary_rds)
