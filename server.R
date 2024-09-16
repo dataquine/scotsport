@@ -133,7 +133,7 @@ function(input, output, session) {
     # How many towns have facilities
     towns <- scotland_areas() |>
       # For town calculations make all (Near) entries the same town
-      mutate(town = stringr::str_remove(town, " (Near)")) |>
+      mutate(town = stringr::str_remove(town, " \\(Near\\)")) |>
       distinct(town)
 
     total_towns <- nrow(towns)
@@ -187,7 +187,7 @@ function(input, output, session) {
     df_facility_detail <- scotland_areas() |>
       # We are displaying addresses as if for mailing purposes
       # Remove any "(Near)"
-      mutate(town = stringr::str_remove(town, "(Near)")) |>
+      mutate(town = stringr::str_remove(town, "\\(Near\\)")) |>
       dplyr::select(
         name, address, facility_type, facility_sub_type,
         town, postcode, la_name
